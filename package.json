@@ -1,0 +1,12 @@
+{
+  "name": "mohha",
+  "version": "1.0.0",
+  "description": "MOHHA — عين ترى أكثر",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
