@@ -10,10 +10,9 @@ function sendJson(res, statusCode, data) {
 function sendFile(res, filePath, contentType) {
   fs.readFile(filePath, (error, data) => {
     if (error) {
-      sendJson(res, 404, {
+      return sendJson(res, 404, {
         error: "File not found"
       });
-      return;
     }
 
     res.statusCode = 200;
@@ -23,14 +22,23 @@ function sendFile(res, filePath, contentType) {
 }
 
 module.exports = async (req, res) => {
-  const url = new URL(
-    req.url,
-    `https://${req.headers.host || "localhost"}`
-  );
+  const pathname = new URL(
+    req.url || "/",
+    "https://mohha.local"
+  ).pathname;
 
-  const pathname = url.pathname;
+  const publicDir = path.join(process.cwd(), "public");
 
-  // فحص حالة MOHHA
+  // الصفحة الرئيسية
+  if (pathname === "/") {
+    return sendFile(
+      res,
+      path.join(publicDir, "index.html"),
+      "text/html; charset=utf-8"
+    );
+  }
+
+  // اختبار الخادم
   if (pathname === "/api/health") {
     return sendJson(res, 200, {
       app: "MOHHA",
@@ -64,18 +72,7 @@ module.exports = async (req, res) => {
     });
   }
 
-  const publicDir = path.join(process.cwd(), "public");
-
-  // الصفحة الرئيسية
-  if (pathname === "/") {
-    return sendFile(
-      res,
-      path.join(publicDir, "index.html"),
-      "text/html; charset=utf-8"
-    );
-  }
-
-  // ملفات CSS
+  // CSS
   if (pathname === "/public/css/style.css") {
     return sendFile(
       res,
@@ -84,7 +81,7 @@ module.exports = async (req, res) => {
     );
   }
 
-  // ملف JavaScript
+  // JavaScript
   if (pathname === "/public/js/app.js") {
     return sendFile(
       res,
