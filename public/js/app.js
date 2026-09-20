@@ -1,71 +1,125 @@
-const chatForm = document.getElementById("chat-form");
-const messageInput = document.getElementById("message-input");
+const form = document.getElementById("chat-form");
+
+const input = document.getElementById("message-input");
+
 const messages = document.getElementById("messages");
 
-function addMessage(name, text) {
+const sendButton = document.getElementById("send-button");
+
+
+function addMessage(sender, text, type) {
+
   const message = document.createElement("div");
 
-  message.className = "message";
+  message.className = `message ${type || ""}`;
 
-  const title = document.createElement("strong");
-  title.textContent = name;
 
-  const content = document.createElement("p");
-  content.textContent = text;
+  const strong = document.createElement("strong");
 
-  message.appendChild(title);
-  message.appendChild(content);
+  strong.textContent = sender;
+
+
+  const paragraph = document.createElement("p");
+
+  paragraph.textContent = text;
+
+
+  message.appendChild(strong);
+
+  message.appendChild(paragraph);
+
 
   messages.appendChild(message);
+
 
   messages.scrollTop = messages.scrollHeight;
 }
 
-chatForm.addEventListener("submit", async (event) => {
+
+async function sendMessage(message) {
+
+  const response = await fetch("/api/chat", {
+
+    method: "POST",
+
+    headers: {
+      "Content-Type": "application/json"
+    },
+
+    body: JSON.stringify({
+      message
+    })
+
+  });
+
+
+  if (!response.ok) {
+    throw new Error("API request failed");
+  }
+
+
+  return response.json();
+}
+
+
+form.addEventListener("submit", async (event) => {
+
   event.preventDefault();
 
-  const message = messageInput.value.trim();
+
+  const message = input.value.trim();
+
 
   if (!message) {
     return;
   }
 
-  addMessage("أنت", message);
 
-  messageInput.value = "";
-  messageInput.disabled = true;
+  addMessage(
+    "أنت",
+    message,
+    "user-message"
+  );
+
+
+  input.value = "";
+
+  input.disabled = true;
+
+  sendButton.disabled = true;
+
+  sendButton.textContent = "جارٍ الإرسال...";
+
 
   try {
-    const response = await fetch("/api/chat", {
-      method: "POST",
 
-      headers: {
-        "Content-Type": "application/json"
-      },
+    const data = await sendMessage(message);
 
-      body: JSON.stringify({
-        message: message
-      })
-    });
-
-    const data = await response.json();
 
     addMessage(
       "MOHHA",
-      data.reply || "لم يصل رد من الخادم."
+      data.reply || "لم تصل استجابة من MOHHA.",
+      "mohha-message"
     );
 
   } catch (error) {
 
     addMessage(
       "MOHHA",
-      "حدث خطأ أثناء الاتصال بالخادم."
+      "تعذر الاتصال بالخادم حاليًا.",
+      "mohha-message"
     );
 
   } finally {
 
-    messageInput.disabled = false;
-    messageInput.focus();
+    input.disabled = false;
+
+    sendButton.disabled = false;
+
+    sendButton.textContent = "إرسال";
+
+    input.focus();
 
   }
+
 });
